@@ -10,3 +10,14 @@ The [ESP-GET_READY](https://github.com/Mr1JS/ESP-GET_READY) submodule is a repos
 
 ### Application Side
 A separate repository exists for the Application side, which will interact with the ESP devices through the REST-API provided by ESP-GET_READY.
+
+## Submodules
+Clone with submodules:
+```
+git clone --recurse-submodules https://github.com/MusLead/Frontier_Exploration
+```
+
+Or initialize after cloning:
+```
+git submodule update --init --recursive
+```
