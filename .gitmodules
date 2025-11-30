@@ -1,3 +1,4 @@
 [submodule "ESP-GET_READY"]
-	path = ESP-GET_READY
-	url = https://github.com/MusLead/ESP-GET_READY.git
+    path = ESP-GET_READY
+    url = https://github.com/MusLead/ESP-GET_READY.git
+    branch = main
