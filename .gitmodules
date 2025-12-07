@@ -2,3 +2,9 @@
     path = ESP-GET_READY
     url = https://github.com/MusLead/ESP-GET_READY.git
     branch = main
+[submodule "ESP_Communcation_Center"]
+	path = ESP_Communcation_Center
+	url = https://github.com/MusLead/ESP_Communcation_Center
+[submodule "SHVS_Front_End_Server"]
+	path = SHVS_Front_End_Server
+	url = https://github.com/MusLead/SHVS_Front_End_Server
