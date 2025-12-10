@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   update-submodules:
@@ -75,7 +74,11 @@ jobs:
               if [ -n "$SUBMODULE_BRANCH" ]; then
                 echo "Updating to latest commit on branch: $SUBMODULE_BRANCH"
                 if git -C "$SUBMODULE_PATH" fetch origin "$SUBMODULE_BRANCH" 2>/dev/null; then
-                  git -C "$SUBMODULE_PATH" checkout -B "$SUBMODULE_BRANCH" "origin/$SUBMODULE_BRANCH"
+                  # Ensure working directory is clean before reset
+                  git -C "$SUBMODULE_PATH" reset --hard HEAD
+                  git -C "$SUBMODULE_PATH" checkout "$SUBMODULE_BRANCH" 2>/dev/null || \
+                    git -C "$SUBMODULE_PATH" checkout -b "$SUBMODULE_BRANCH" "origin/$SUBMODULE_BRANCH"
+                  git -C "$SUBMODULE_PATH" reset --hard "origin/$SUBMODULE_BRANCH"
                 else
                   echo "Warning: Branch $SUBMODULE_BRANCH not found, skipping update for $SUBMODULE_PATH"
                   continue
@@ -86,14 +89,18 @@ jobs:
                 # Get the default branch name from remote using ls-remote
                 DEFAULT_BRANCH=$(git ls-remote --symref "$SUBMODULE_URL" HEAD 2>/dev/null | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2; exit}')
                 if [ -z "$DEFAULT_BRANCH" ]; then
-                  DEFAULT_BRANCH="main"
+                  # Fallback: try to get any branch from remote
+                  DEFAULT_BRANCH=$(git ls-remote --heads "$SUBMODULE_URL" 2>/dev/null | head -n1 | awk '{sub(/refs\/heads\//, "", $2); print $2}')
                 fi
-                echo "Default branch detected: $DEFAULT_BRANCH"
-                # Try to checkout the default branch, fallback to detached HEAD at origin/HEAD
-                if git -C "$SUBMODULE_PATH" checkout -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH" 2>/dev/null; then
-                  echo "Checked out $DEFAULT_BRANCH"
+                if [ -n "$DEFAULT_BRANCH" ]; then
+                  echo "Default branch detected: $DEFAULT_BRANCH"
+                  # Ensure working directory is clean before reset
+                  git -C "$SUBMODULE_PATH" reset --hard HEAD
+                  git -C "$SUBMODULE_PATH" checkout "$DEFAULT_BRANCH" 2>/dev/null || \
+                    git -C "$SUBMODULE_PATH" checkout -b "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH"
+                  git -C "$SUBMODULE_PATH" reset --hard "origin/$DEFAULT_BRANCH"
                 else
-                  echo "Branch $DEFAULT_BRANCH not available, using detached HEAD at origin/HEAD"
+                  echo "No branches found, using detached HEAD at origin/HEAD"
                   git -C "$SUBMODULE_PATH" checkout origin/HEAD
                 fi
               fi
@@ -172,7 +179,7 @@ jobs:
           fi
           
           git commit -m "$COMMIT_MSG" -m "Automated update by GitHub Actions"
-          git push origin ${{ github.ref_name }}
+          git push origin "${{ github.ref_name }}"
           
           echo "✓ Changes committed and pushed successfully"
 
