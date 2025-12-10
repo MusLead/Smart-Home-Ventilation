@@ -12,7 +12,22 @@ permissions:
 jobs:
   update-submodules:
     runs-on: ubuntu-latest
+    env:
+      END_DATE: "2025-02-28"   # Last date where this workflow should still do work (UTC)
     steps:
+      - name: Check end date
+        run: |
+          set -e
+          NOW_DATE="$(date -u +%Y-%m-%d)"
+          echo "Current UTC date: $NOW_DATE"
+          echo "End date:        $END_DATE"
+
+          # If today is after END_DATE, exit without doing anything
+          if [[ "$NOW_DATE" > "$END_DATE" ]]; then
+            echo "End date has passed. Skipping submodule update."
+            exit 0
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -194,4 +209,3 @@ jobs:
             echo "### ℹ️ No Updates Needed" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "All submodules are already up to date." >> $GITHUB_STEP_SUMMARY
-          fi
