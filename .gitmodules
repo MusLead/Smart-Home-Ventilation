@@ -10,4 +10,4 @@
 	url = https://github.com/MusLead/SHVS_Front_End_Server
 [submodule "ESP_Sensors_Actuators"]
 	path = ESP_Sensors_Actuators
-	url = https://github.com/MusLead/ESP_Sensors_Actuators?
+	url = https://github.com/MusLead/ESP_Sensors_Actuators
