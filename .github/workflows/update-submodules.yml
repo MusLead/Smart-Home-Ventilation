@@ -33,7 +33,8 @@ jobs:
           
           echo "Processing submodules..."
           CHANGES_MADE=false
-          STALE_SUBMODULES=""
+          STALE_SUBMODULES=()
+          REMOVED_COUNT=0
           
           # Check if .gitmodules exists
           if [ ! -f .gitmodules ]; then
@@ -67,25 +68,22 @@ jobs:
             if git ls-remote --exit-code "$SUBMODULE_URL" HEAD >/dev/null 2>&1; then
               echo "✓ Remote is accessible"
               
-              # Get the branch for this submodule (defaults to checking remote HEAD)
+              # Get the branch for this submodule (defaults to remote default branch)
               SUBMODULE_BRANCH=$(git config --file .gitmodules --get "submodule.$SUBMODULE_PATH.branch" || echo "")
               
               # Update the submodule to latest commit on tracked branch
-              cd "$SUBMODULE_PATH"
-              
               if [ -n "$SUBMODULE_BRANCH" ]; then
                 echo "Updating to latest commit on branch: $SUBMODULE_BRANCH"
-                git fetch origin "$SUBMODULE_BRANCH"
-                git checkout "$SUBMODULE_BRANCH"
-                git pull origin "$SUBMODULE_BRANCH"
+                git -C "$SUBMODULE_PATH" fetch origin "$SUBMODULE_BRANCH"
+                git -C "$SUBMODULE_PATH" checkout -B "$SUBMODULE_BRANCH" "origin/$SUBMODULE_BRANCH"
               else
                 echo "Updating to latest commit on default branch"
-                git fetch origin
-                git checkout "$(git rev-parse HEAD)"
-                git pull origin HEAD || true
+                git -C "$SUBMODULE_PATH" fetch origin
+                # Get the default branch name from remote
+                DEFAULT_BRANCH=$(git -C "$SUBMODULE_PATH" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+                git -C "$SUBMODULE_PATH" checkout -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH" 2>/dev/null || \
+                  git -C "$SUBMODULE_PATH" reset --hard origin/HEAD
               fi
-              
-              cd ..
               
               # Check if submodule commit changed
               if git diff --quiet HEAD -- "$SUBMODULE_PATH"; then
@@ -98,15 +96,15 @@ jobs:
             else
               echo "✗ Remote is not accessible or empty"
               echo "Marking submodule $SUBMODULE_PATH for removal..."
-              STALE_SUBMODULES="$STALE_SUBMODULES $SUBMODULE_PATH"
+              STALE_SUBMODULES+=("$SUBMODULE_PATH")
             fi
           done
           
           # Remove stale submodules
-          if [ -n "$STALE_SUBMODULES" ]; then
+          if [ ${#STALE_SUBMODULES[@]} -gt 0 ]; then
             echo "----------------------------------------"
             echo "Removing stale submodules..."
-            for SUBMODULE_PATH in $STALE_SUBMODULES; do
+            for SUBMODULE_PATH in "${STALE_SUBMODULES[@]}"; do
               echo "Removing stale submodule: $SUBMODULE_PATH"
               
               # Remove from .gitmodules
@@ -125,16 +123,19 @@ jobs:
               rm -rf ".git/modules/$SUBMODULE_PATH" 2>/dev/null || true
               
               CHANGES_MADE=true
+              REMOVED_COUNT=$((REMOVED_COUNT + 1))
             done
           fi
           
           # Output result
           if [ "$CHANGES_MADE" = true ]; then
             echo "changes_made=true" >> $GITHUB_OUTPUT
+            echo "removed_count=$REMOVED_COUNT" >> $GITHUB_OUTPUT
             echo "----------------------------------------"
             echo "✓ Changes detected and staged"
           else
             echo "changes_made=false" >> $GITHUB_OUTPUT
+            echo "removed_count=0" >> $GITHUB_OUTPUT
             echo "----------------------------------------"
             echo "No changes needed"
           fi
@@ -149,12 +150,12 @@ jobs:
           fi
           
           # Create commit message
-          COMMIT_MSG="chore: update submodules to latest commits"
+          REMOVED_COUNT="${{ steps.update.outputs.removed_count }}"
           
-          # Add info about removed submodules if any
-          REMOVED=$(git diff --staged --name-only | grep -E "^\.gitmodules$" || echo "")
-          if [ -n "$REMOVED" ]; then
-            COMMIT_MSG="$COMMIT_MSG and remove stale entries"
+          if [ "$REMOVED_COUNT" -gt 0 ]; then
+            COMMIT_MSG="chore: update submodules to latest commits and remove stale entries"
+          else
+            COMMIT_MSG="chore: update submodules to latest commits"
           fi
           
           git commit -m "$COMMIT_MSG" -m "Automated update by GitHub Actions"
