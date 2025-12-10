@@ -42,15 +42,15 @@ jobs:
             exit 0
           fi
           
-          # Parse submodules from .gitmodules
-          SUBMODULES=$(git config --file .gitmodules --get-regexp path | awk '{ print $2 }')
+          # Parse submodules from .gitmodules into an array
+          mapfile -t SUBMODULES < <(git config --file .gitmodules --get-regexp path | awk '{ print $2 }')
           
-          if [ -z "$SUBMODULES" ]; then
+          if [ ${#SUBMODULES[@]} -eq 0 ]; then
             echo "No submodules configured."
             exit 0
           fi
           
-          for SUBMODULE_PATH in $SUBMODULES; do
+          for SUBMODULE_PATH in "${SUBMODULES[@]}"; do
             echo "----------------------------------------"
             echo "Processing submodule: $SUBMODULE_PATH"
             
@@ -74,15 +74,28 @@ jobs:
               # Update the submodule to latest commit on tracked branch
               if [ -n "$SUBMODULE_BRANCH" ]; then
                 echo "Updating to latest commit on branch: $SUBMODULE_BRANCH"
-                git -C "$SUBMODULE_PATH" fetch origin "$SUBMODULE_BRANCH"
-                git -C "$SUBMODULE_PATH" checkout -B "$SUBMODULE_BRANCH" "origin/$SUBMODULE_BRANCH"
+                if git -C "$SUBMODULE_PATH" fetch origin "$SUBMODULE_BRANCH" 2>/dev/null; then
+                  git -C "$SUBMODULE_PATH" checkout -B "$SUBMODULE_BRANCH" "origin/$SUBMODULE_BRANCH"
+                else
+                  echo "Warning: Branch $SUBMODULE_BRANCH not found, skipping update for $SUBMODULE_PATH"
+                  continue
+                fi
               else
                 echo "Updating to latest commit on default branch"
                 git -C "$SUBMODULE_PATH" fetch origin
-                # Get the default branch name from remote
-                DEFAULT_BRANCH=$(git -C "$SUBMODULE_PATH" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
-                git -C "$SUBMODULE_PATH" checkout -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH" 2>/dev/null || \
-                  git -C "$SUBMODULE_PATH" reset --hard origin/HEAD
+                # Get the default branch name from remote using ls-remote
+                DEFAULT_BRANCH=$(git ls-remote --symref "$SUBMODULE_URL" HEAD 2>/dev/null | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2; exit}')
+                if [ -z "$DEFAULT_BRANCH" ]; then
+                  DEFAULT_BRANCH="main"
+                fi
+                echo "Default branch detected: $DEFAULT_BRANCH"
+                # Try to checkout the default branch, fallback to detached HEAD at origin/HEAD
+                if git -C "$SUBMODULE_PATH" checkout -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH" 2>/dev/null; then
+                  echo "Checked out $DEFAULT_BRANCH"
+                else
+                  echo "Branch $DEFAULT_BRANCH not available, using detached HEAD at origin/HEAD"
+                  git -C "$SUBMODULE_PATH" checkout origin/HEAD
+                fi
               fi
               
               # Check if submodule commit changed
