@@ -209,3 +209,4 @@ jobs:
             echo "### ℹ️ No Updates Needed" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "All submodules are already up to date." >> $GITHUB_STEP_SUMMARY
+          fi
