@@ -44,47 +44,47 @@ jobs:
         id: update
         run: |
           set -e
-          
+
           echo "Processing submodules..."
           CHANGES_MADE=false
           STALE_SUBMODULES=()
           REMOVED_COUNT=0
-          
+
           # Check if .gitmodules exists
           if [ ! -f .gitmodules ]; then
             echo "No .gitmodules file found. Nothing to update."
             exit 0
           fi
-          
+
           # Parse submodules from .gitmodules into an array
           mapfile -t SUBMODULES < <(git config --file .gitmodules --get-regexp path | awk '{ print $2 }')
-          
+
           if [ ${#SUBMODULES[@]} -eq 0 ]; then
             echo "No submodules configured."
             exit 0
           fi
-          
+
           for SUBMODULE_PATH in "${SUBMODULES[@]}"; do
             echo "----------------------------------------"
             echo "Processing submodule: $SUBMODULE_PATH"
-            
+
             # Get submodule URL
             SUBMODULE_URL=$(git config --file .gitmodules --get "submodule.$SUBMODULE_PATH.url" || echo "")
-            
+
             if [ -z "$SUBMODULE_URL" ]; then
               echo "Warning: No URL found for submodule $SUBMODULE_PATH"
               continue
             fi
-            
+
             echo "URL: $SUBMODULE_URL"
-            
+
             # Check if remote is accessible using git ls-remote
             if git ls-remote --exit-code "$SUBMODULE_URL" HEAD >/dev/null 2>&1; then
               echo "✓ Remote is accessible"
-              
+
               # Get the branch for this submodule (defaults to remote default branch)
               SUBMODULE_BRANCH=$(git config --file .gitmodules --get "submodule.$SUBMODULE_PATH.branch" || echo "")
-              
+
               # Update the submodule to latest commit on tracked branch
               if [ -n "$SUBMODULE_BRANCH" ]; then
                 echo "Updating to latest commit on branch: $SUBMODULE_BRANCH"
@@ -119,7 +119,7 @@ jobs:
                   git -C "$SUBMODULE_PATH" checkout origin/HEAD
                 fi
               fi
-              
+
               # Check if submodule commit changed
               if git diff --quiet HEAD -- "$SUBMODULE_PATH"; then
                 echo "No changes in $SUBMODULE_PATH"
@@ -134,34 +134,34 @@ jobs:
               STALE_SUBMODULES+=("$SUBMODULE_PATH")
             fi
           done
-          
+
           # Remove stale submodules
           if [ ${#STALE_SUBMODULES[@]} -gt 0 ]; then
             echo "----------------------------------------"
             echo "Removing stale submodules..."
             for SUBMODULE_PATH in "${STALE_SUBMODULES[@]}"; do
               echo "Removing stale submodule: $SUBMODULE_PATH"
-              
+
               # Remove from .gitmodules
               git config --file .gitmodules --remove-section "submodule.$SUBMODULE_PATH" 2>/dev/null || true
-              
+
               # Stage .gitmodules changes
               git add .gitmodules
-              
+
               # Remove from .git/config
               git submodule deinit -f "$SUBMODULE_PATH" 2>/dev/null || true
-              
+
               # Remove from working tree and index
               git rm -f "$SUBMODULE_PATH" 2>/dev/null || true
-              
+
               # Remove leftover .git directory if it exists
               rm -rf ".git/modules/$SUBMODULE_PATH" 2>/dev/null || true
-              
+
               CHANGES_MADE=true
               REMOVED_COUNT=$((REMOVED_COUNT + 1))
             done
           fi
-          
+
           # Output result
           if [ "$CHANGES_MADE" = true ]; then
             echo "changes_made=true" >> $GITHUB_OUTPUT
@@ -183,19 +183,19 @@ jobs:
             echo "No staged changes to commit"
             exit 0
           fi
-          
+
           # Create commit message
           REMOVED_COUNT="${{ steps.update.outputs.removed_count }}"
-          
+
           if [ "$REMOVED_COUNT" -gt 0 ]; then
             COMMIT_MSG="chore: update submodules to latest commits and remove stale entries"
           else
             COMMIT_MSG="chore: update submodules to latest commits"
           fi
-          
+
           git commit -m "$COMMIT_MSG" -m "Automated update by GitHub Actions"
           git push origin "${{ github.ref_name }}"
-          
+
           echo "✓ Changes committed and pushed successfully"
 
       - name: Summary
