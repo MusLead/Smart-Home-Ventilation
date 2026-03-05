@@ -1,0 +1,12 @@
+dependencies:
+  idf:
+    version: '>=4.4'
+description: Espressif's Servo Motor Component
+documentation: https://docs.espressif.com/projects/esp-iot-solution/en/latest/motor/servo.html
+issues: https://github.com/espressif/esp-iot-solution/issues
+repository: git://github.com/espressif/esp-iot-solution.git
+repository_info:
+  commit_sha: f5ca5b553873e8ff3c044d5bae56d0eae1d0673b
+  path: components/motor/servo
+url: https://github.com/espressif/esp-iot-solution/tree/master/components/motor/servo
+version: 0.1.0
