@@ -10,6 +10,10 @@ Jatin:
 - 1x Servo
 - 1x Ventilator
 
+Enrico:
+- Ventilator
+- Servo
+
 ## Note: 
 - Ventilator Fan (12V) from Enrico
   > Black: GND
