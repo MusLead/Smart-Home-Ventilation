@@ -11,8 +11,8 @@ Jatin:
 - 1x Ventilator
 
 Enrico:
-- Ventilator
-- Servo
+- 1x Ventilator Fan
+- 1x Servo
 
 ## Note: 
 - Ventilator Fan (12V) from Enrico
