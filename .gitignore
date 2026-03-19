@@ -9,7 +9,8 @@
 
 # Node modules
 node_modules/
-npm-debug.log
+**/node_modules/
+npm-debug.log*
 
 # Python
 __pycache__/

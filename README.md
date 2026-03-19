@@ -17,6 +17,9 @@ The [ESP_Communcation_Center](https://github.com/MusLead/ESP_Communcation_Center
 ### SHVS_Front_End_Server
 The [SHVS_Front_End_Server](https://github.com/MusLead/SHVS_Front_End_Server) submodule is the server with UI/UX that allows clients to access and control the entire Smart Home Ventilation System (SHVS).
 
+### WebApp_EJS
+`SHVS_Front_End_Server/WebApp_EJS` is the new Express + EJS frontend application. It duplicates and modernizes the frontend/proxy responsibilities of the older implementation, but follows the standard Express generator structure (`app.js`, `bin/www`, `routes`, `views`, `public`).
+
 ## Submodules
 Clone with submodules:
 ```
@@ -27,3 +30,10 @@ Or initialize after cloning:
 ```
 git submodule update --init --recursive
 ```
+
+## Frontend Notes
+
+- `SHVS_Front_End_Server/WebApp_EJS` is the new generated Express app you should use going forward.
+- `SHVS_Front_End_Server/WebApp_HTML` is the older HTML-oriented frontend inside the same submodule and remains for reference/history.
+- The browser talks to the Express app, and the Express app forwards `/api/v1/...` requests to the ESP32 HTTP API.
+- The system should only be used after `MQTT Connected` appears in the monitor of `ESP_Communcation_Center`.
