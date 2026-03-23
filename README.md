@@ -31,6 +31,12 @@ Or initialize after cloning:
 git submodule update --init --recursive
 ```
 
+Git Pull Submodules
+````
+git pull --recurse-submodules
+````
+
+
 ## Frontend Notes
 
 - `SHVS_Front_End_Server/WebApp_EJS` is the new generated Express app you should use going forward.
