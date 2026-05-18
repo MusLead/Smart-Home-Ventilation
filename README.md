@@ -1,6 +1,8 @@
 # Smart-Home-Ventilation
 This is a Semester Project for Internet of Things Project Hochschule Fulda WS25/26, Germany
 
+[**YouTube zum Dokumentationsvideo**](https://youtu.be/t1U2bfjIH9w?is=zIjMvNMrnFLVjkTx)
+
 ## Project Architecture
 
 This project consists of multiple components:
