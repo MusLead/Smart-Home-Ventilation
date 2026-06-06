@@ -7,8 +7,8 @@ This is a Semester Project for Internet of Things Project Hochschule Fulda WS25/
 
 This project consists of multiple components:
 
-### ESP-GET_READY
-The [ESP-GET_READY](https://github.com/MusLead/ESP-GET_READY) submodule is a repository dedicated to managing communication between ESP microcontrollers and various sensors and actuators. It provides different HTTP REST-API endpoints that enable the application to access and control the ESP devices through the internet.
+### ESP-GET_READY (Test-Repository)
+The [ESP-GET_READY](https://github.com/MusLead/ESP-GET_READY) submodule is a repository dedicated to testing the communication functionality between ESP microcontrollers and various sensors and actuators. It provides a variety of HTTP REST API endpoints, enabling applications to access and control ESP devices via the internet.
 
 ### ESP_Sensors_Actuators
 The [ESP_Sensors_Actuators](https://github.com/MusLead/ESP_Sensors_Actuators) submodule contains the firmware and integration code for indoor and outdoor sensor/actuator nodes used by SHVS. It includes `ESP_Indoor_Sensors_Actuators` (e.g., BME680, window servo, absorber) and `ESP_Outdoor_Sensors_Actuators` (e.g., BME680, anemometer, door servo, relay switch), and it exchanges data and control messages via MQTT through `ESP_Communcation_Center`.
